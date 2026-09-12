@@ -1,0 +1,21 @@
+{
+  "Settings": {
+    "ArgumentsSeparator": ",",
+    "DecimalSymbol": ".",
+    "NamingType": "795b9275-56b5-45c8-bff0-74c4feaa4195",
+    "UICultureName": "en",
+    "UnitsCultureName": "en"
+  },
+  "Summaries": [
+    {
+      "Author": "Matheus",
+      "Description": "Adiciona uma regiao Ftool ao SMath Studio: mostra o preview de um modelo do Ftool e abre o Ftool para edicao com um duplo clique.",
+      "FileTypes": [],
+      "Id": "c1aba7a7-e39c-49ea-a6d1-7fe7d842b374",
+      "Regions": [],
+      "Terms": [],
+      "Title": "SMathFtoolBridge",
+      "Version": "1.0.0.0"
+    }
+  ]
+}

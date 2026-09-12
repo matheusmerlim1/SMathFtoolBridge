@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMathFtoolBridge — diagramas do Ftool dentro do SMath Studio</title>
+<meta name="description" content="Plugin para o SMath Studio que incorpora o diagrama de um modelo do Ftool na planilha de cálculo, com abertura por duplo clique e sincronização da imagem em um clique.">
+
+<style>
+  :root {
+    --bg:        #0d1117;
+    --bg-alt:    #131a24;
+    --card:      #161d29;
+    --line:      #253040;
+    --txt:       #e8edf5;
+    --txt-dim:   #9aa7b8;
+    --accent:    #58a6ff;
+    --accent-2:  #7ee787;
+    --warn:      #f0b72f;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --maxw: 860px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--txt);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding-inline: 20px; }
+
+  /* ---------------------------------------------------------------- hero */
+
+  header.hero {
+    padding-block: 72px 56px;
+    border-bottom: 1px solid var(--line);
+    background:
+      radial-gradient(900px 400px at 50% -120px, rgba(88,166,255,.16), transparent 70%),
+      var(--bg);
+  }
+  .eyebrow {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: .76rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(88,166,255,.35);
+    border-radius: 999px;
+    padding: .28rem .8rem;
+    margin-bottom: 1.4rem;
+  }
+  h1 {
+    margin: 0 0 .6rem;
+    font-size: clamp(2rem, 6vw, 3rem);
+    line-height: 1.12;
+    letter-spacing: -.02em;
+  }
+  .tagline {
+    margin: 0 0 2rem;
+    font-size: clamp(1.05rem, 2.4vw, 1.22rem);
+    color: var(--txt-dim);
+    max-width: 42rem;
+  }
+  .tagline strong { color: var(--txt); font-weight: 600; }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: .7rem; }
+  .btn {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .68rem 1.15rem;
+    border-radius: 8px;
+    font-weight: 600; font-size: .95rem;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: transform .12s ease, background .15s ease, border-color .15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary { background: var(--accent); color: #08131f; }
+  .btn-primary:hover { background: #79b8ff; }
+  .btn-ghost { border-color: var(--line); color: var(--txt); background: var(--bg-alt); }
+  .btn-ghost:hover { border-color: var(--accent); }
+
+  .meta-row {
+    margin-top: 2.2rem;
+    display: flex; flex-wrap: wrap; gap: .5rem 1.6rem;
+    font-family: var(--mono); font-size: .8rem; color: var(--txt-dim);
+  }
+  .meta-row b { color: var(--txt); font-weight: 600; }
+
+  /* ---------------------------------------------------------------- sections */
+
+  section { padding-block: 56px; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: 0; }
+
+  h2 {
+    font-size: clamp(1.4rem, 3.4vw, 1.75rem);
+    letter-spacing: -.015em;
+    margin: 0 0 .5rem;
+  }
+  h2 .num {
+    font-family: var(--mono); font-size: .78rem; color: var(--accent);
+    display: block; margin-bottom: .35rem; letter-spacing: .1em;
+  }
+  h3 { font-size: 1.05rem; margin: 2rem 0 .5rem; letter-spacing: -.01em; }
+  .lead { color: var(--txt-dim); margin: 0 0 1.6rem; max-width: 46rem; }
+
+  p { margin: 0 0 1rem; }
+  a { color: var(--accent); }
+
+  code {
+    font-family: var(--mono); font-size: .88em;
+    background: var(--bg-alt); border: 1px solid var(--line);
+    border-radius: 4px; padding: .1em .38em;
+  }
+  pre {
+    background: var(--bg-alt); border: 1px solid var(--line);
+    border-radius: 10px; padding: 1rem 1.1rem;
+    overflow-x: auto; font-family: var(--mono); font-size: .84rem;
+    line-height: 1.6; margin: 0 0 1.2rem;
+  }
+  pre code { background: none; border: 0; padding: 0; font-size: inherit; }
+  .c-dim { color: var(--txt-dim); }
+  .c-acc { color: var(--accent-2); }
+
+  /* ---------------------------------------------------------------- flow */
+
+  .flow { display: grid; gap: .7rem; margin: 0 0 1.4rem; counter-reset: step; }
+  .step {
+    display: grid; grid-template-columns: 2rem 1fr; gap: 0 .9rem;
+    align-items: start;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: .9rem 1.1rem;
+  }
+  .step::before {
+    counter-increment: step; content: counter(step);
+    font-family: var(--mono); font-size: .82rem; font-weight: 700;
+    color: var(--accent);
+    width: 2rem; height: 2rem; border-radius: 50%;
+    display: grid; place-items: center;
+    background: rgba(88,166,255,.1); border: 1px solid rgba(88,166,255,.3);
+  }
+  .step b { display: block; margin-bottom: .1rem; }
+  .step span { color: var(--txt-dim); font-size: .93rem; }
+
+  /* ---------------------------------------------------------------- cards */
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .9rem; }
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; padding: 1.1rem 1.2rem;
+  }
+  .card h4 { margin: 0 0 .35rem; font-size: .97rem; }
+  .card p { margin: 0; color: var(--txt-dim); font-size: .91rem; }
+
+  /* ---------------------------------------------------------------- callout */
+
+  .callout {
+    border-left: 3px solid var(--warn);
+    background: rgba(240,183,47,.07);
+    border-radius: 0 8px 8px 0;
+    padding: .9rem 1.1rem; margin: 0 0 1.2rem;
+  }
+  .callout.info { border-left-color: var(--accent); background: rgba(88,166,255,.07); }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout b { color: var(--txt); }
+
+  /* ---------------------------------------------------------------- list */
+
+  ul.clean { list-style: none; padding: 0; margin: 0 0 1.2rem; }
+  ul.clean li {
+    position: relative; padding-left: 1.4rem; margin-bottom: .7rem;
+    color: var(--txt-dim);
+  }
+  ul.clean li::before {
+    content: "▸"; position: absolute; left: 0; color: var(--accent);
+  }
+  ul.clean li b { color: var(--txt); }
+
+  /* ---------------------------------------------------------------- table */
+
+  .tablewrap { overflow-x: auto; margin: 0 0 1.2rem; }
+  table { border-collapse: collapse; width: 100%; font-size: .9rem; min-width: 460px; }
+  th, td { text-align: left; padding: .6rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--txt); font-size: .8rem; text-transform: uppercase; letter-spacing: .06em; }
+  td { color: var(--txt-dim); }
+  td b, td code { color: var(--txt); }
+
+  /* ---------------------------------------------------------------- footer */
+
+  footer {
+    padding-block: 40px 60px;
+    color: var(--txt-dim); font-size: .87rem;
+    border-top: 1px solid var(--line);
+  }
+  footer a { color: var(--txt-dim); }
+  footer a:hover { color: var(--accent); }
+
+  @media (max-width: 520px) {
+    header.hero { padding-block: 52px 40px; }
+    section { padding-block: 42px; }
+    .btn { width: 100%; justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Plugin · SMath Studio</span>
+    <h1>SMathFtoolBridge</h1>
+    <p class="tagline">
+      O diagrama estrutural do <strong>Ftool</strong> vive dentro da sua planilha do
+      <strong>SMath Studio</strong>. Duplo clique abre o modelo para editar; um clique
+      traz a imagem atualizada de volta. Sem exportar arquivo, sem print manual,
+      sem colar imagem.
+    </p>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="dist/SMathFtoolBridge-Setup.exe">
+        ↓ Baixar instalador (.exe)
+      </a>
+      <a class="btn btn-ghost" href="dist/SMathFtoolBridge-1.0.0.0.zip">Baixar .zip</a>
+      <a class="btn btn-ghost" href="docs/architecture.md">Documentação técnica</a>
+    </div>
+
+    <div class="meta-row">
+      <span>versão <b>1.0.0.0</b></span>
+      <span>alvo <b>SMath 1.5.x</b></span>
+      <span><b>.NET Framework 4.8</b></span>
+      <span>instalação <b>sem admin</b></span>
+    </div>
+  </div>
+</header>
+
+<!-- ===================================================== o problema -->
+<section>
+  <div class="wrap">
+    <h2><span class="num">01</span> O problema</h2>
+    <p class="lead">
+      Quem faz memorial de cálculo estrutural trabalha em duas janelas ao mesmo tempo.
+    </p>
+
+    <p>
+      O <b>Ftool</b> é onde o pórtico é modelado e analisado. O <b>SMath Studio</b> é onde
+      o cálculo é documentado. O diagrama precisa aparecer no memorial — e o caminho
+      normal para isso é manual e repetitivo:
+    </p>
+
+    <pre><code><span class="c-dim"># a cada ajuste no modelo, de novo:</span>
+Ftool  → Arquivo → Export Model Screen → salvar imagem
+SMath  → Inserir imagem → escolher o arquivo → reposicionar
+       → apagar a imagem velha</code></pre>
+
+    <p>
+      E como a imagem é só um arquivo colado, ela <b>não tem vínculo nenhum</b> com o
+      modelo. Meses depois ninguém sabe qual <code>.ftl</code> gerou aquele diagrama, nem
+      se a imagem ainda corresponde ao modelo atual.
+    </p>
+
+    <div class="callout info">
+      <p>
+        <b>A ideia do plugin:</b> transformar o diagrama numa região nativa da planilha,
+        que guarda o caminho do <code>.ftl</code> junto com o documento e sabe conversar
+        com o Ftool aberto.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== como funciona -->
+<section>
+  <div class="wrap">
+    <h2><span class="num">02</span> Como funciona, na prática</h2>
+    <p class="lead">O ciclo inteiro acontece dentro do SMath, pelo menu de contexto.</p>
+
+    <div class="flow">
+      <div class="step">
+        <div>
+          <b>Inserir &gt; Ftool</b>
+          <span>Você escolhe um arquivo <code>.ftl</code> e a região já entra vinculada a ele.
+          Numa região que já existe, o vínculo se troca pelo menu de contexto.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <b>Duplo clique abre o Ftool</b>
+          <span>Com o <code>.ftl</code> vinculado carregado. Se já houver uma janela do Ftool
+          aberta com esse arquivo, ela é trazida para a frente em vez de abrir outra.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <b>Você ajusta o modelo</b>
+          <span>No Ftool, normalmente. Sem precisar salvar nem exportar nada.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div>
+          <b>"Sincronizar com o Ftool aberto"</b>
+          <span>De volta ao SMath, o plugin captura a janela do Ftool, recorta sozinho
+          só a área do desenho e atualiza o preview na planilha.</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <p>
+        <b>O preview não se atualiza sozinho.</b> Ele é uma imagem estática: depois de
+        mexer no modelo, é sempre o <b>Sincronizar</b> que traz o desenho novo. Essa é a
+        etapa que mais confunde quem usa o plugin pela primeira vez.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== recursos -->
+<section>
+  <div class="wrap">
+    <h2><span class="num">03</span> O que a região faz</h2>
+
+    <div class="grid">
+      <div class="card">
+        <h4>Vínculo persistente</h4>
+        <p>O caminho do <code>.ftl</code> é salvo junto com o documento <code>.sm</code>.
+        Reabrir a planilha meses depois mantém a ligação com o modelo.</p>
+      </div>
+      <div class="card">
+        <h4>Recorte automático</h4>
+        <p>A captura pega a janela inteira do Ftool; o plugin acha o canvas do desenho
+        e descarta menus, barras e painel lateral.</p>
+      </div>
+      <div class="card">
+        <h4>Recorte manual fino</h4>
+        <p>Cortar topo, base, esquerda ou direita por porcentagem, várias vezes seguidas,
+        com desfazer do último passo ou de todos de uma vez.</p>
+      </div>
+      <div class="card">
+        <h4>Proporção preservada</h4>
+        <p>A imagem nunca estica. O desenho é encaixado em <i>letterbox</i> dentro da
+        região, mesmo com recorte assimétrico.</p>
+      </div>
+      <div class="card">
+        <h4>Zoom por comando</h4>
+        <p><b>Ampliar</b> e <b>Reduzir</b> multiplicam o tamanho por 1,25× / 0,8×, e o
+        tamanho escolhido sobrevive às sincronizações.</p>
+      </div>
+      <div class="card">
+        <h4>Ftool lembrado</h4>
+        <p>O caminho do <code>Ftool.exe</code> é perguntado uma vez e guardado em
+        <code>%AppData%</code>, reconfigurável pelo menu Serviço/Tools.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================================================== instalar -->
+<section>
+  <div class="wrap">
+    <h2><span class="num">04</span> Instalar</h2>
+    <p class="lead">
+      Pré-requisito: SMath Studio e Ftool já instalados (versão normal, não portátil).
+      Não precisa compilar nada.
+    </p>
+
+    <div class="flow">
+      <div class="step"><div><b>Feche o SMath Studio</b>
+        <span>Ele carrega os plugins na inicialização e mantém a DLL em uso enquanto está aberto.</span></div></div>
+      <div class="step"><div><b>Dois cliques em <code>SMathFtoolBridge-Setup.exe</code></b>
+        <span>Sem pedido de administrador: a instalação é só para o seu usuário, em
+        <code>%AppData%\SMath\extensions\plugins</code>.</span></div></div>
+      <div class="step"><div><b>Abra o SMath e confirme</b>
+        <span>Em <b>Serviço/Tools</b> deve aparecer
+        <i>"Ftool: configurar caminho do Ftool.exe..."</i>. Se apareceu, o plugin carregou.</span></div></div>
+    </div>
+
+    <p>
+      Para desinstalar, <code>Desinstalar.bat</code> (no zip) apaga a pasta do plugin
+      inteira. Se a instalação falhar, a janela grava um log em
+      <code>%TEMP%\SMathFtoolBridge-install.log</code>.
+    </p>
+  </div>
+</section>
+
+<!-- ===================================================== engenharia -->
+<section>
+  <div class="wrap">
+    <h2><span class="num">05</span> Por dentro: o que deu trabalho</h2>
+    <p class="lead">
+      O Ftool não tem API, nem automação COM, nem linha de comando além de "abrir
+      arquivo". E o SDK de plugins do SMath é praticamente não documentado. As decisões
+      abaixo saíram de tentativa e erro com o software real.
+    </p>
+
+    <h3>Capturar o diagrama sem API</h3>
+    <p>
+      A primeira tentativa foi mandar o Ftool executar o próprio comando de exportar
+      (<code>File &gt; Export Model Screen</code>) por mensagem do Windows
+      (<code>WM_COMMAND</code>). Funcionava num modelo vazio de teste, mas não em modelos
+      reais — mesmo com a janela em foco e esperas de até 60 segundos.
+    </p>
+    <p>
+      A causa era mais simples do que parecia: a janela do Ftool estava <b>minimizada</b>,
+      e nesse estado não existe imagem renderizada para copiar. A solução final abandona
+      o menu do Ftool e usa <code>PrintWindow</code>, API nativa do Windows, restaurando a
+      janela antes se necessário. Ficou mais robusto porque não depende da versão nem do
+      idioma do menu do Ftool.
+    </p>
+
+    <h3>Achar o desenho dentro do print</h3>
+    <p>
+      O print traz a janela inteira. Para sobrar só o diagrama, o plugin procura a cor de
+      fundo predominante — o canvas do Ftool é sempre um bloco grande de cor sólida,
+      bem diferente dos painéis ao redor — e recorta o maior bloco contínuo dessa cor,
+      tolerando pequenas interrupções, como a barra de mensagem no topo, para não fatiar
+      o desenho ao meio.
+    </p>
+
+    <h3>Duas armadilhas do SDK do SMath</h3>
+    <p>
+      Estas só apareceram testando a instalação de verdade — nos dois casos o plugin
+      simplesmente <b>não aparecia</b>, sem erro nenhum na interface:
+    </p>
+
+    <ul class="clean">
+      <li>
+        <b>Nunca referencie a DLL de outro plugin.</b> A primeira versão herdava de
+        <code>PictureRegion</code>, que vive na DLL de um plugin nativo — não numa
+        biblioteca do núcleo. Ao carregar o plugin isoladamente por reflexão, o SMath não
+        resolve essa dependência e a carga falha inteira. A região passou a herdar direto
+        de <code>RegionBase</code> e desenhar a própria imagem.
+      </li>
+      <li>
+        <b>Falta um arquivo marcador não documentado.</b> Além da pasta com a DLL e os
+        metadados, o SMath só lista o plugin se existir um
+        <code>config.&lt;versão-do-SMath&gt;.ini</code> ao lado. Isso foi descoberto
+        comparando a pasta do plugin com a de plugins de terceiros já instalados. O
+        instalador gera esse arquivo sozinho, detectando a versão do SMath.
+      </li>
+      <li>
+        <b>Compatibilidade entre versões é frágil.</b> Numa máquina com SMath mais antigo o
+        plugin quebrou por usar um tipo que não existia naquela versão. Como as DLLs do
+        SMath não são assinadas, o plugin carrega contra qualquer versão instalada — e
+        qualquer membro ausente derruba a carga inteira, não só aquele método. A correção
+        foi trocar as APIs de conveniência do SMath por WinForms puro.
+      </li>
+    </ul>
+
+    <h3>Gerar o instalador sem compilador</h3>
+    <p>
+      O executável é montado com o <b>IExpress</b>, que já vem no Windows — nenhuma
+      dependência externa. Duas armadilhas dele custaram caro e ficaram documentadas no
+      script de build: o roteiro <code>.SED</code> é lido em ANSI, então um caminho de
+      projeto com acento faz o build falhar <b>sem mensagem nenhuma</b>; e o programa de
+      <code>AppLaunched</code> precisa ser um dos arquivos empacotados — usar
+      <code>cmd /c setup.cmd</code> faz o instalador abrir e fechar sem instalar nada,
+      também em silêncio.
+    </p>
+  </div>
+</section>
+
+<!-- ===================================================== limitações -->
+<section>
+  <div class="wrap">
+    <h2><span class="num">06</span> Limitações conhecidas</h2>
+    <p class="lead">O que o plugin ainda não faz — dito na cara.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Limitação</th><th>Situação</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Sincronizar exige o Ftool aberto</b></td>
+            <td>Com o arquivo carregado, no momento do clique. Fechado, o plugin avisa —
+                abra pelo duplo clique primeiro.</td>
+          </tr>
+          <tr>
+            <td><b>O recorte automático não é perfeito</b></td>
+            <td>Pode sobrar um pouco de barra de ferramentas nas bordas. Existe
+                "Sincronizar (janela inteira, sem cortar)" como saída, mais o recorte manual.</td>
+          </tr>
+          <tr>
+            <td><b>Não redimensiona arrastando a borda</b></td>
+            <td>Não foi possível pela API de região do jeito que o plugin foi implementado.
+                O zoom fica nos comandos Ampliar/Reduzir.</td>
+          </tr>
+          <tr>
+            <td><b>O caminho do <code>.ftl</code> é absoluto</b></td>
+            <td>Mover a pasta do documento para outra máquina pode quebrar o vínculo.
+                Guardar caminho relativo depende de descobrir como a região acessa o
+                caminho do próprio <code>.sm</code>.</td>
+          </tr>
+          <tr>
+            <td><b>O preview é estático</b></td>
+            <td>Não acompanha o modelo sozinho: precisa de um novo Sincronizar.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Próximos passos</h3>
+    <ul class="clean">
+      <li>Redimensionamento arrastando a borda da região.</li>
+      <li>Caminho do <code>.ftl</code> relativo ao documento <code>.sm</code>.</li>
+      <li>Sincronizar automaticamente quando o Ftool aberto pela região é fechado.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================================================== repositório -->
+<section>
+  <div class="wrap">
+    <h2><span class="num">07</span> O repositório</h2>
+
+    <pre><code>dist/
+  SMathFtoolBridge-Setup.exe     <span class="c-dim">instalador de duplo clique</span>
+  SMathFtoolBridge-1.0.0.0.zip   <span class="c-dim">mesmo conteúdo, para instalação manual</span>
+  SMathFtoolBridge.dll           <span class="c-dim">o plugin</span>
+  install.ps1 / uninstall.ps1    <span class="c-dim">scripts de instalação</span>
+build/
+  make-installer.ps1             <span class="c-dim">gera o .exe e o .zip juntos</span>
+docs/
+  architecture.md                <span class="c-acc">a referência técnica real do projeto</span></code></pre>
+
+    <p>
+      Para regerar os dois artefatos de distribuição a partir dos mesmos arquivos, de
+      forma que nunca fiquem fora de sincronia:
+    </p>
+
+    <pre><code>powershell -ExecutionPolicy Bypass -File build\make-installer.ps1</code></pre>
+
+    <div class="callout">
+      <p>
+        <b>Sobre o código-fonte:</b> este repositório distribui o plugin já compilado mais
+        a documentação técnica. O código C# ficou na máquina onde o plugin foi
+        desenvolvido e ainda não foi trazido para cá. Enquanto isso,
+        <a href="docs/architecture.md">docs/architecture.md</a> é a referência do projeto:
+        documenta a API do SMath usada, o porquê de cada decisão e as armadilhas que só
+        apareceram testando de verdade.
+      </p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>
+      <b>SMathFtoolBridge</b> 1.0.0.0 — plugin para SMath Studio · por Matheus Raposo<br>
+      <a href="https://smath.com" target="_blank" rel="noopener">SMath Studio</a> ·
+      <a href="https://www.tecgraf.puc-rio.br/ftool/" target="_blank" rel="noopener">Ftool (Tecgraf/PUC-Rio)</a>
+    </p>
+    <p style="margin-top:1rem">
+      Projeto sem vínculo com os desenvolvedores do SMath Studio ou do Ftool.
+    </p>
+  </div>
+</footer>
+
+<!-- === Botao de volta ao portfolio - cole antes de </body> === -->
+<a id="mr-portfolio-btn" href="https://matheusmerlim1.github.io/" target="_blank" rel="noopener"
+   aria-label="Abrir o portf&oacute;lio de Matheus Raposo" title="Ver todos os meus projetos">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+       stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>
+  </svg>
+  <span>Portf&oacute;lio</span>
+</a>
+<style>
+#mr-portfolio-btn {
+  position: fixed; top: 12px; right: 12px; z-index: 2147483000;
+  display: inline-flex; align-items: center; gap: .4rem;
+  padding: .42rem .8rem; border-radius: 999px;
+  font: 600 13px/1 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #e8edf5; text-decoration: none; white-space: nowrap;
+  background: rgba(18,24,38,.92);
+  border: 1px solid rgba(88,166,255,.45);
+  box-shadow: 0 2px 12px rgba(0,0,0,.35);
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+  transition: transform .15s, border-color .15s, background .15s;
+}
+#mr-portfolio-btn:hover {
+  transform: translateY(-1px); color: #fff; text-decoration: none;
+  background: rgba(24,32,50,.96); border-color: #58a6ff;
+}
+#mr-portfolio-btn:focus-visible { outline: 2px solid #58a6ff; outline-offset: 2px; }
+@media (max-width: 520px) {
+  #mr-portfolio-btn { padding: .45rem; }
+  #mr-portfolio-btn span { display: none; }
+}
+@media print { #mr-portfolio-btn { display: none; } }
+</style>
+<script>
+/* Abre espaco para o botao em vez de cobrir o que ja existia no canto.
+   1) empurra para a esquerda o conteudo da barra que ocupa aquele espaco;
+   2) se ainda sobrar sobreposicao, desloca o proprio item. */
+(function () {
+  var btn = document.getElementById('mr-portfolio-btn');
+  if (!btn) return;
+
+  var desfazer = [];
+
+  function limpar() {
+    for (var i = 0; i < desfazer.length; i++) desfazer[i]();
+    desfazer = [];
+  }
+
+  function guardar(el, prop) {
+    var antes = el.style[prop];
+    desfazer.push(function () { el.style[prop] = antes; });
+  }
+
+  /* item discreto = nao ocupa quase toda a largura; e um controle, rotulo ou icone */
+  function ehItem(el) {
+    if (!el || el === document.body || el === document.documentElement) return false;
+    return el.getBoundingClientRect().width < innerWidth * 0.7;
+  }
+
+  /* sobe ate a barra que contem o item (algo largo o bastante para ter padding) */
+  function barra(el) {
+    for (var n = 0; el && n < 8; n++, el = el.parentElement) {
+      if (el === document.body || el === document.documentElement) return null;
+      if (el.getBoundingClientRect().width >= innerWidth * 0.6) return el;
+    }
+    return null;
+  }
+
+  function encosta(a, b) {
+    return !(a.right <= b.left || a.left >= b.right || a.bottom <= b.top || a.top >= b.bottom);
+  }
+
+  function varrer() {
+    var r = btn.getBoundingClientRect();
+    var y = Math.round(r.top + r.height / 2);
+    var achados = [];
+    btn.style.visibility = 'hidden';
+    for (var x = Math.floor(r.right); x > r.left - 10; x -= 8) {
+      if (x < 1 || x > innerWidth - 1) continue;
+      var sob = document.elementFromPoint(x, y);
+      if (ehItem(sob) && achados.indexOf(sob) < 0) achados.push(sob);
+    }
+    btn.style.visibility = '';
+    return achados;
+  }
+
+  function ajustar() {
+    limpar();
+    var r = btn.getBoundingClientRect();
+    if (!r.width) return;
+    var reserva = Math.ceil(r.width + 20);
+
+    /* 1) padding na barra: desloca o conteudo dela para a esquerda */
+    var barras = [];
+    varrer().forEach(function (item) {
+      var b = barra(item);
+      if (b && barras.indexOf(b) < 0) barras.push(b);
+    });
+    barras.forEach(function (b) {
+      if ((parseFloat(getComputedStyle(b).paddingRight) || 0) >= reserva) return;
+      guardar(b, 'paddingRight');
+      b.style.paddingRight = reserva + 'px';
+    });
+
+    /* 2) o que continuar embaixo do botao (tipicamente position:absolute,
+          que nao anda com padding) e deslocado individualmente */
+    r = btn.getBoundingClientRect();
+    varrer().forEach(function (item) {
+      if (!encosta(item.getBoundingClientRect(), r)) return;
+      var cs = getComputedStyle(item);
+      if (cs.position === 'absolute' || cs.position === 'fixed') {
+        var atual = parseFloat(cs.right);
+        guardar(item, 'right');
+        item.style.right = (isNaN(atual) ? reserva : atual + reserva) + 'px';
+      } else {
+        guardar(item, 'marginRight');
+        item.style.marginRight =
+          ((parseFloat(cs.marginRight) || 0) + reserva) + 'px';
+      }
+    });
+
+    /* 3) rede de seguranca: o que insistir em ficar embaixo do botao e
+          deslocado no proprio elemento. transform sempre move, seja qual
+          for o position, o display ou o container. */
+    for (var tent = 0; tent < 3; tent++) {
+      r = btn.getBoundingClientRect();
+      var teimosos = varrer().filter(function (item) {
+        return encosta(item.getBoundingClientRect(), r);
+      });
+      if (!teimosos.length) break;
+      teimosos.forEach(function (item) {
+        var caixa = item.getBoundingClientRect();
+        var passo = Math.ceil(caixa.right - r.left + 10);
+        if (passo <= 0) return;
+        guardar(item, 'transform');
+        item.style.transform = 'translateX(-' + passo + 'px)';
+      });
+    }
+
+    btn.setAttribute('data-mr-ok', '1');   /* marca que o ajuste ja rodou */
+  }
+
+  var pendente = 0;
+  function agendar() {
+    /* sem requestAnimationFrame de proposito: ele nao dispara quando a pagina
+       esta em aba oculta ou em iframe fora da tela, e as leituras de layout
+       abaixo ja forcam o recalculo sozinhas */
+    clearTimeout(pendente);
+    pendente = setTimeout(ajustar, 60);
+  }
+
+  agendar();
+  addEventListener('DOMContentLoaded', agendar);
+  addEventListener('load', agendar);
+  addEventListener('resize', agendar);
+
+  /* muita pagina monta o cabecalho por JS depois do load; refaz o calculo
+     quando o DOM mudar e em algumas passadas tardias, por seguranca */
+  if (window.MutationObserver) {
+    new MutationObserver(agendar).observe(document.documentElement,
+      { childList: true, subtree: true });
+  }
+  [400, 1200, 3000].forEach(function (t) { setTimeout(agendar, t); });
+})();
+</script>
+<!-- === fim do botao === -->
+
+</body>
+</html>

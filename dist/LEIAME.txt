@@ -1,0 +1,60 @@
+SMathFtoolBridge - instalação
+==============================
+
+Pré-requisito: SMath Studio e Ftool já instalados (versão normal, não portátil).
+
+Instalar (jeito mais fácil):
+1. Feche o SMath Studio, se estiver aberto.
+2. Dê dois cliques em "SMathFtoolBridge-Setup.exe".
+3. Abra o SMath Studio. No menu Serviço (ou Tools, dependendo do idioma) deve
+   aparecer o item "Ftool: configurar caminho do Ftool.exe..." - isso confirma
+   que o plugin carregou. Também dá para conferir em Serviço/Tools >
+   Complementos.
+
+O instalador não pede permissão de administrador: o plugin é instalado só para
+o seu usuário, em %AppData%\SMath\extensions\plugins.
+
+Instalar pelo zip (alternativa, se preferir ver os arquivos):
+1. Extraia todos os arquivos deste zip juntos em uma pasta qualquer.
+2. Feche o SMath Studio, se estiver aberto.
+3. Dê dois cliques em "Instalar.bat".
+   (Clicar com botão direito em "install.ps1" > "Executar com o PowerShell"
+   NÃO funciona na maioria dos Windows - o Windows bloqueia scripts .ps1 por
+   padrão e a janela fecha sozinha sem avisar nada. Use o "Instalar.bat".)
+
+Usar:
+1. Menu Inserir > Ftool - escolhe um arquivo .ftl e a região já entra vinculada
+   a ele (ou clique direito numa região existente > "Vincular arquivo .ftl...").
+2. Duplo clique na região abre o Ftool com esse arquivo. Na primeira vez, ele
+   vai pedir para você indicar onde está o Ftool.exe.
+3. Ajusta o modelo no Ftool normalmente (sem precisar salvar nem exportar nada).
+4. De volta ao SMath, clique direito na região > "Sincronizar com o Ftool
+   aberto" - isso tira um print da janela do Ftool, corta automaticamente só a
+   área do diagrama e atualiza o preview na planilha.
+   IMPORTANTE: o preview não se atualiza sozinho. Depois de mexer no modelo no
+   Ftool, é sempre esse "Sincronizar" que traz a imagem nova para a planilha.
+5. Não dá para redimensionar arrastando a borda da região - use "Ftool:
+   ampliar" / "Ftool: reduzir" no menu de contexto.
+6. Para cortar manualmente qualquer lado da imagem, use "Ftool: cortar
+   topo/base/esquerda/direita..." (pergunta quantos % cortar, padrão 25%). Dá
+   pra cortar várias vezes seguidas; "Ftool: desfazer último corte" volta só o
+   último passo, "Ftool: desfazer todos os cortes" volta à imagem inteira de
+   uma vez. A imagem nunca fica esticada/distorcida, mesmo redimensionando pra
+   um formato diferente.
+
+Se o corte automático cortar parte do desenho por engano, use "Sincronizar
+(janela inteira, sem cortar)" no menu de contexto como alternativa, e depois
+corte manualmente com os comandos do passo 6.
+
+Desinstalar:
+- Dê dois cliques em "Desinstalar.bat" (vem junto no zip).
+- Ou rode: powershell -ExecutionPolicy Bypass -File .\uninstall.ps1
+
+Se der problema na instalação:
+- A janela do instalador grava um log em %TEMP%\SMathFtoolBridge-install.log
+  com o que aconteceu. Esse arquivo ajuda a descobrir onde parou.
+- "O SMath Studio está aberto": feche o programa e rode de novo. O SMath carrega
+  os plugins na inicialização e mantém a DLL em uso enquanto está aberto.
+- "Não encontrei o SMath Studio": o instalador procura no registro, nos atalhos
+  do Menu Iniciar e em Program Files. Se mesmo assim não achar, confirme que o
+  SMath Studio está instalado normalmente (não é versão portátil).

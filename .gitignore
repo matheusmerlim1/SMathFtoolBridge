@@ -1,0 +1,28 @@
+# Build do plugin C# (quando o codigo-fonte voltar para o repositorio)
+bin/
+obj/
+*.user
+*.suo
+
+# ATENCAO: 'dist/' NAO entra aqui, ao contrario do .gitignore padrao.
+# Neste projeto dist/ nao e saida de compilacao descartavel: e o proprio
+# pacote distribuido (o instalador .exe, o .zip e a DLL do plugin). Sem ele
+# o repositorio nao serve para nada, e os links de download da pagina quebram.
+
+# Temporarios do gerador de instalador
+*.sed
+SMathFtoolBridge-build-*/
+
+# Credenciais e segredos
+.env
+*.env
+secrets.json
+token.txt
+
+# Guia local de uso pessoal
+githubGuia.md
+
+# Arquivos de sistema
+.DS_Store
+Thumbs.db
+desktop.ini
