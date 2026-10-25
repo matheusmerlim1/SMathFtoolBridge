@@ -148,7 +148,8 @@
     display: grid; place-items: center;
     background: rgba(88,166,255,.1); border: 1px solid rgba(88,166,255,.3);
   }
-  .step b { display: block; margin-bottom: .1rem; }
+  /* só o título do passo vira bloco: o negrito dentro da frase quebrava a linha ("Em / Serviço/Tools / deve…") */
+  .step > div > b { display: block; margin-bottom: .1rem; }
   .step span { color: var(--txt-dim); font-size: .93rem; }
 
   /* ---------------------------------------------------------------- cards */
