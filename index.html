@@ -159,7 +159,7 @@
     background: var(--card); border: 1px solid var(--line);
     border-radius: 10px; padding: 1.1rem 1.2rem;
   }
-  .card h4 { margin: 0 0 .35rem; font-size: .97rem; }
+  .card h3 { margin: 0 0 .35rem; font-size: .97rem; letter-spacing: 0; }
   .card p { margin: 0; color: var(--txt-dim); font-size: .91rem; }
 
   /* ---------------------------------------------------------------- callout */
@@ -205,6 +205,33 @@
   footer a { color: var(--txt-dim); }
   footer a:hover { color: var(--accent); }
 
+  /* ---------------------------------------------------------------- acessibilidade */
+
+  /* foco visível em todo controle: --accent dá 7,5:1 sobre --bg (WCAG 2.4.7 / 1.4.11) */
+  a:focus-visible, pre:focus-visible, .tablewrap:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+  /* blocos roláveis recebem tabindex para quem usa teclado conseguir rolar (WCAG 2.1.1) */
+  pre:focus-visible { border-radius: 10px; }
+
+  /* link "Pular para o conteúdo": fora da tela até receber foco */
+  .pular {
+    position: absolute; left: 12px; top: -60px; z-index: 2147483001;
+    background: var(--accent); color: #08131f; font-weight: 600;
+    padding: .55rem .9rem; border-radius: 8px; text-decoration: none;
+  }
+  .pular:focus { top: 12px; }
+  .pular:focus-visible { outline-color: var(--txt); }
+  /* o main só recebe foco pelo link de pular; não é controle, dispensa o anel */
+  main:focus { outline: none; }
+
+  /* sem rolagem suave nem deslocamento no hover para quem pediu menos movimento */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after { transition: none !important; animation: none !important; }
+    .btn:hover, #mr-portfolio-btn:hover { transform: none !important; }
+  }
+
   @media (max-width: 520px) {
     header.hero { padding-block: 52px 40px; }
     section { padding-block: 42px; }
@@ -213,6 +240,8 @@
 </style>
 </head>
 <body>
+
+<a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
 <header class="hero">
   <div class="wrap">
@@ -242,6 +271,8 @@
   </div>
 </header>
 
+<main id="conteudo" tabindex="-1">
+
 <!-- ===================================================== o problema -->
 <section>
   <div class="wrap">
@@ -256,7 +287,7 @@
       normal para isso é manual e repetitivo:
     </p>
 
-    <pre><code><span class="c-dim"># a cada ajuste no modelo, de novo:</span>
+    <pre tabindex="0"><code><span class="c-dim"># a cada ajuste no modelo, de novo:</span>
 Ftool  → Arquivo → Export Model Screen → salvar imagem
 SMath  → Inserir imagem → escolher o arquivo → reposicionar
        → apagar a imagem velha</code></pre>
@@ -330,32 +361,32 @@ SMath  → Inserir imagem → escolher o arquivo → reposicionar
 
     <div class="grid">
       <div class="card">
-        <h4>Vínculo persistente</h4>
+        <h3>Vínculo persistente</h3>
         <p>O caminho do <code>.ftl</code> é salvo junto com o documento <code>.sm</code>.
         Reabrir a planilha meses depois mantém a ligação com o modelo.</p>
       </div>
       <div class="card">
-        <h4>Recorte automático</h4>
+        <h3>Recorte automático</h3>
         <p>A captura pega a janela inteira do Ftool; o plugin acha o canvas do desenho
         e descarta menus, barras e painel lateral.</p>
       </div>
       <div class="card">
-        <h4>Recorte manual fino</h4>
+        <h3>Recorte manual fino</h3>
         <p>Cortar topo, base, esquerda ou direita por porcentagem, várias vezes seguidas,
         com desfazer do último passo ou de todos de uma vez.</p>
       </div>
       <div class="card">
-        <h4>Proporção preservada</h4>
+        <h3>Proporção preservada</h3>
         <p>A imagem nunca estica. O desenho é encaixado em <i>letterbox</i> dentro da
         região, mesmo com recorte assimétrico.</p>
       </div>
       <div class="card">
-        <h4>Zoom por comando</h4>
+        <h3>Zoom por comando</h3>
         <p><b>Ampliar</b> e <b>Reduzir</b> multiplicam o tamanho por 1,25× / 0,8×, e o
         tamanho escolhido sobrevive às sincronizações.</p>
       </div>
       <div class="card">
-        <h4>Ftool lembrado</h4>
+        <h3>Ftool lembrado</h3>
         <p>O caminho do <code>Ftool.exe</code> é perguntado uma vez e guardado em
         <code>%AppData%</code>, reconfigurável pelo menu Serviço/Tools.</p>
       </div>
@@ -474,7 +505,7 @@ SMath  → Inserir imagem → escolher o arquivo → reposicionar
     <h2><span class="num">06</span> Limitações conhecidas</h2>
     <p class="lead">O que o plugin ainda não faz — dito na cara.</p>
 
-    <div class="tablewrap">
+    <div class="tablewrap" tabindex="0" role="region" aria-label="Limitações conhecidas">
       <table>
         <thead>
           <tr><th>Limitação</th><th>Situação</th></tr>
@@ -523,7 +554,7 @@ SMath  → Inserir imagem → escolher o arquivo → reposicionar
   <div class="wrap">
     <h2><span class="num">07</span> O repositório</h2>
 
-    <pre><code>dist/
+    <pre tabindex="0"><code>dist/
   SMathFtoolBridge-Setup.exe     <span class="c-dim">instalador de duplo clique</span>
   SMathFtoolBridge-1.0.0.0.zip   <span class="c-dim">mesmo conteúdo, para instalação manual</span>
   SMathFtoolBridge.dll           <span class="c-dim">o plugin</span>
@@ -538,7 +569,7 @@ docs/
       forma que nunca fiquem fora de sincronia:
     </p>
 
-    <pre><code>powershell -ExecutionPolicy Bypass -File build\make-installer.ps1</code></pre>
+    <pre tabindex="0"><code>powershell -ExecutionPolicy Bypass -File build\make-installer.ps1</code></pre>
 
     <div class="callout">
       <p>
@@ -553,12 +584,14 @@ docs/
   </div>
 </section>
 
+</main>
+
 <footer>
   <div class="wrap">
     <p>
       <b>SMathFtoolBridge</b> 1.0.0.0 — plugin para SMath Studio · por Matheus Raposo<br>
-      <a href="https://smath.com" target="_blank" rel="noopener">SMath Studio</a> ·
-      <a href="https://www.tecgraf.puc-rio.br/ftool/" target="_blank" rel="noopener">Ftool (Tecgraf/PUC-Rio)</a>
+      <a href="https://smath.com" target="_blank" rel="noopener" aria-label="SMath Studio (abre em nova aba)">SMath Studio</a> ·
+      <a href="https://www.tecgraf.puc-rio.br/ftool/" target="_blank" rel="noopener" aria-label="Ftool (Tecgraf/PUC-Rio) (abre em nova aba)">Ftool (Tecgraf/PUC-Rio)</a>
     </p>
     <p style="margin-top:1rem">
       Projeto sem vínculo com os desenvolvedores do SMath Studio ou do Ftool.
@@ -567,14 +600,16 @@ docs/
 </footer>
 
 <!-- === Botao de volta ao portfolio - cole antes de </body> === -->
+<nav aria-label="Portf&oacute;lio">
 <a id="mr-portfolio-btn" href="https://matheusmerlim1.github.io/" target="_blank" rel="noopener"
-   aria-label="Abrir o portf&oacute;lio de Matheus Raposo" title="Ver todos os meus projetos">
+   aria-label="Portf&oacute;lio de Matheus Raposo (abre em nova aba)" title="Ver todos os meus projetos">
   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>
   </svg>
   <span>Portf&oacute;lio</span>
 </a>
+</nav>
 <style>
 #mr-portfolio-btn {
   position: fixed; top: 12px; right: 12px; z-index: 2147483000;
